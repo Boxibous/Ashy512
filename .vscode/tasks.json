@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+        "label": "build",
+        "type": "shell",
+        "command": "dotnet build --sc -o .\\bin", // or whatever command you want
+        "group": "build",
+        "hide": true
+        },
+        {
+            "label": "Build & Run",
+            "dependsOn": [
+                "build"
+            ],
+            "type": "shell",
+            "command": "dotnet run",
+            "group": "build"
+        }
+    ]
+}
