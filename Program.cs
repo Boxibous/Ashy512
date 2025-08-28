@@ -9,11 +9,11 @@ class Program
 {
     static void Main(string[] str)
     {
-        Console.WriteLine(Convert.ToHexString(Ashy512(string.Join(" ", str))));
+        Console.WriteLine(Ashy512(string.Join(" ", str)));
         // Console.WriteLine(Convert.ToHexString(ashy512("ashy")));
         // Console.WriteLine(Convert.ToHexString(ashy512("bshy")));
     }
-    static byte[] Ashy512(string str) { return Convert.ToHexString(Ashy512(Encoding.UTF32.GetBytes(str))); }
+    static string Ashy512(string str) { return Convert.ToHexString(Ashy512(Encoding.UTF32.GetBytes(str))); }
     static byte[] Ashy512(byte[] str)
     {
         // im just blindly doing random stuff, dont mind, but it works
