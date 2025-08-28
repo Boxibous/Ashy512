@@ -7,11 +7,9 @@ namespace Chase;
 
 class Program
 {
-    delegate void _(int n);
-    static event _ __ = delegate {};
     static void Main(string[] str)
     {
-        Console.WriteLine(Ashy512(string.Join(" ", str)));
+        Console.WriteLine(Convert.ToHexString(Ashy512(string.Join(" ", str))));
         // Console.WriteLine(Convert.ToHexString(ashy512("ashy")));
         // Console.WriteLine(Convert.ToHexString(ashy512("bshy")));
     }
