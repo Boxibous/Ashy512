@@ -19,47 +19,47 @@ class Program
         // im just blindly doing random stuff, dont mind, but it works
         ulong Entropy(ulong val, ulong thresold, ulong entropy)
         {
-            for (int k = 0; k < 32; k++) {
-                val *= (val >> 32) * (thresold ^ (ulong)k);
+            for (int k = 0; k < 16; k++) {
+                val *= (val << 32) * (thresold ^ ((ulong)k + 0x48BCD3FFF));
                 val ^= 0x487FC8AD8CBDA93B;
-                val += (val >> (int)(thresold & 63)) | (val << (int)(thresold & 63));
-                val *= 0xFFFFFFFFFFFFFDCF & (ulong)k;
-                for (int i = 0; i < 8; i++)
+                val ^= (val << (int)(thresold & 63)) | (val >> (int)(thresold & 63));
+                val ^= 0x000FFFFFFFFFFDCF ^ (((ulong)k + 0xF1) * 0x4C38FD4FFC);
+                for (int i = 0; i < 4; i++)
                 {
-                    val *= (((val << (int)(thresold & 63)) | (val >> (int)(64 - (thresold & 63)))) ^ (val >> 32)) + val ^ entropy;
+                    val *= ((val << (int)(thresold & 63)) | (val >> (int)(64 - (thresold & 63)))) ^ (val >> 32) * val ^ (entropy | thresold);
                 }
             }
             return val;
         }
         ulong[] states = [
-            0xFFFFFFFFFFFFFFC5,
+            0x00000FFFFFFFFFC5,
             0x487FC8AD8CBDA93B,
             0x00BCEDFE358CCB34,
             0xBBC384BBC483CBCB,
             0x19361d809cc845d5,
-            0xFFFFFFFFFFFFFDCF,
+            0x00000FFFFFFFFDCF,
             0x85BBECBBEBC38547,
             0x284767364CEB28BB,
         ];
         long strdep = 0;
         for (int i = 0; i < str.Length; i++)
         {
-            strdep += (long)((ulong)str[i] + (ulong)i ^ states[2]);
-            states[i % 8] *= ((ulong)~((ulong)str[i] * (ulong)0x483BC73FFF83FB << 0x4A) << (int)(strdep & 63)) ^ states[2];
+            strdep += (long)(str[i] + (ulong)i ^ states[2]);
+            states[i % 8] *= (~(str[i] * (ulong)0x483BC73FFF83FB << 0x4A) << (int)(strdep & 63)) ^ states[2];
             states[i % 8] ^= Entropy(Entropy(states[(i + 1) % 8], (ulong)strdep, states[(i + 2) % 8] ^ states[i % 8]), states[(i + 5) % 8], Entropy((ulong)strdep, states[i % 8], (ulong)strdep));
             states[(i + 1) % 8] *= ~(states[(i ^ 0x2) % 8] ^ states[i % 8]) ^ ~(ulong)strdep;
             states[(i + 2) % 8] ^= Entropy(((ulong)~str[i]), 1, states[i % 8]) ^ 0x27A48B;
-            states[(i + 3) % 8] ^= (((ulong)str[i] << 0x1C | (ulong)str[i]) ^ ((ulong)0x483BC73FFF83FB << 0x4A)) << (int)(strdep & 63);
+            states[(i + 3) % 8] ^= (((ulong)str[i] << 0x1C | str[i]) ^ ((ulong)0x483BC73FFF83FB << 0x4A)) << (int)(strdep & 63);
             for (int k = 0; k < 8; k++)
             {
-                states[(i + 4) % 8] *= (states[i % 8] ^ states[(i + 2) % 8]) & Entropy(states[(i + 3) % 8] ^ states[(i + 1) % 8], (ulong)(str[i] ^ k), (ulong)strdep);
+                states[(i + 4) % 8] ^= (states[i % 8] ^ states[(i + 2) % 8]) & Entropy(states[(i + 3) % 8] ^ states[(i + 1) % 8], (ulong)(str[i] ^ k + 0xF5), (ulong)strdep);
                 states[(i + 5) % 8] ^= states[(i + 4) % 8] & states[(i + 2) % 8];
                 states[(i + 6) % 8] ^= Entropy(states[(i + 5) % 8], states[(i + 4) % 8], states[(i + 3) % 8]);
-                states[(i + 7) % 8] ^= Entropy(states[(i + 6) % 8], states[i % 8] ^ (ulong)k, states[(i % 8)]);
-                states[i % 8] *= (states[(i + 7) % 8] & states[(i + 5) % 8]) | states[(i + 5) % 8] ^ Entropy(states[i % 8], (ulong)strdep, 0x483BC73FFF83FB);
+                states[(i + 7) % 8] ^= Entropy(states[(i + 6) % 8], states[i % 8] ^ (ulong)k + 0xF5, states[(i % 8)]);
+                states[(i + k) % 8] ^= (states[(i + 7) % 8] & states[(i + 5) % 8]) | states[(i + 5) % 8] ^ Entropy(states[i % 8], (ulong)strdep, 0x483BC73FFF83FB);
             }
         }
-        for (int i = 0; i < 64; i++)
+        for (int i = 0; i < 16; i++)
         {
             states[0] ^= Entropy(states[3] ^ states[2], states[1] & 63, (ulong)strdep);
             states[1] ^= Entropy(states[0] ^ states[4], states[2] & 63, (ulong)strdep);
