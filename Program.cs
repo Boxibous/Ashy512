@@ -17,9 +17,9 @@ class Program
     static byte[] Ashy512(byte[] str)
     {
         // im just blindly doing random stuff, dont mind, but it works
-        ulong Entropy(ulong val, ulong thresold, ulong entropy)
+        static ulong Entropy(ulong val, ulong thresold, ulong entropy)
         {
-            for (int k = 0; k < 16; k++) {
+            for (int k = 0; k < 256; k++) {
                 val *= (val << 32) * (thresold ^ ((ulong)k + 0x48BCD3FFF));
                 val ^= 0x487FC8AD8CBDA93B;
                 val ^= (val << (int)(thresold & 63)) | (val >> (int)(thresold & 63));
@@ -42,6 +42,17 @@ class Program
             0x284767364CEB28BB,
         ];
         long strdep = 0;
+        for (int i = 0; i < 256; i++)
+        {
+            states[0] ^= ~Entropy(states[1], states[2], states[3]) ^ (str.Length > 0 ? str[i % str.Length] : states[4]);
+            states[1] ^= ~Entropy(states[2], states[3], states[4]) ^ (str.Length > 0 ? str[i % str.Length] : states[5]);
+            states[2] ^= ~Entropy(states[3], states[4], states[5]) ^ (str.Length > 0 ? str[i % str.Length] : states[6]);
+            states[3] ^= ~Entropy(states[4], states[5], states[6]) ^ (str.Length > 0 ? str[i % str.Length] : states[7]);
+            states[4] ^= ~Entropy(states[5], states[6], states[7]) ^ (str.Length > 0 ? str[i % str.Length] : states[0]);
+            states[5] ^= ~Entropy(states[6], states[7], states[0]) ^ (str.Length > 0 ? str[i % str.Length] : states[1]);
+            states[6] ^= ~Entropy(states[7], states[0], states[1]) ^ (str.Length > 0 ? str[i % str.Length] : states[2]);
+            states[7] ^= ~Entropy(states[0], states[1], states[2]) ^ (str.Length > 0 ? str[i % str.Length] : states[3]);
+        } // premix
         for (int i = 0; i < str.Length; i++)
         {
             strdep += (long)(str[i] + ((ulong)i * states[(i + 2) % 8]) ^ states[i % 8]);
@@ -50,7 +61,7 @@ class Program
             states[(i + 1) % 8] *= ~(states[(i ^ 0x2) % 8] ^ states[i % 8]) ^ ~(ulong)strdep;
             states[(i + 2) % 8] ^= Entropy(((ulong)~str[i]), 1, states[i % 8]) ^ 0x27A48B;
             states[(i + 3) % 8] ^= (((ulong)str[i] << 0x1C | str[i]) ^ ((ulong)0x483BC73FFF83FB << 0x4A)) << (int)(strdep & 63);
-            for (int k = 0; k < 8; k++)
+            for (int k = 0; k < 256; k++)
             {
                 states[(i + 4) % 8] ^= (states[i % 8] ^ states[(i + 2) % 8]) & Entropy(states[(i + 3) % 8] * ~states[(i + 1) % 8], (ulong)(str[i] ^ k + 0xF5), (ulong)strdep);
                 states[(i + 5) % 8] ^= ~states[(i + 4) % 8] & states[(i + 2) % 8];
@@ -61,6 +72,7 @@ class Program
         }
         for (int i = 0; i < str.Length; i++)
         {
+            states[0] *= (ulong)(str[i] + 2);
             states[0] ^= Entropy(states[3] ^ states[2], (~states[1] * states[2]) & 63, (ulong)strdep ^ states[0]);
             states[1] ^= Entropy(states[0] ^ states[4], (states[2] * states[1]) & 63, (ulong)strdep * ~states[1]);
             states[2] ^= Entropy(states[1] ^ states[5], (states[3] ^ states[4]) & 63, (ulong)strdep ^ states[2]);
